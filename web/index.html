@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PayGuard — Aevum Agent Payment Vault</title>
+  <style>
+    :root { color-scheme: dark; font-family: system-ui, -apple-system, Segoe UI, sans-serif; }
+    body { margin: 0; background: #0b1020; color: #e8edf7; }
+    header { padding: 28px 24px 16px; border-bottom: 1px solid #26304a; }
+    h1 { margin: 0 0 8px; font-size: 28px; }
+    h2 { font-size: 18px; margin: 0 0 12px; }
+    p.sub { margin: 0; color: #9fb0cd; }
+    main { max-width: 1120px; margin: 0 auto; padding: 24px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+    .card { background: #121a30; border: 1px solid #26304a; border-radius: 12px; padding: 18px; }
+    label { display: block; margin: 10px 0 4px; color: #b9c6df; font-size: 13px; }
+    input { width: 100%; box-sizing: border-box; background: #0b1020; border: 1px solid #33415f; color: #e8edf7; border-radius: 8px; padding: 9px 10px; }
+    button { margin-top: 12px; background: #4266ff; color: white; border: 0; border-radius: 8px; padding: 10px 14px; cursor: pointer; font-weight: 600; }
+    button.secondary { background: #26304a; }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+    .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .row input { flex: 1; min-width: 140px; }
+    code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+    pre { background: #080d19; border: 1px solid #26304a; border-radius: 8px; padding: 12px; overflow: auto; max-height: 280px; }
+    .status { margin-top: 16px; padding: 12px 14px; background: #101828; border-left: 4px solid #4266ff; border-radius: 6px; }
+    .badge { display: inline-block; padding: 3px 8px; border-radius: 999px; background: #20304f; color: #bcd0ff; font-size: 12px; }
+    a { color: #8fb0ff; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>PayGuard</h1>
+    <p class="sub">Budgeted, revocable agent payments with Confirmation of Payee on Aevum Testnet.</p>
+  </header>
+
+  <main>
+    <div class="card">
+      <div class="row">
+        <span class="badge">Chain 44005</span>
+        <span id="accountLabel" class="badge">Not connected</span>
+        <button id="connectBtn">Connect MetaMask</button>
+        <button id="switchBtn" class="secondary">Add / switch to Aevum</button>
+        <button id="refreshBtn" class="secondary">Refresh state</button>
+      </div>
+      <div class="grid" style="margin-top:14px">
+        <div><label>PayGuard contract</label><input id="contractInput" value="0x55A357F9097Ab0C6F711EF23c46c6d32F0f1cFe2" /></div>
+        <div><label>tUSD8 token</label><input id="tokenInput" value="0x456569838f1d43009A91ebA4263147Afd7233483" /></div>
+      </div>
+      <div id="state" class="status">Connect a wallet to begin.</div>
+    </div>
+
+    <div class="grid" style="margin-top:16px">
+      <section class="card">
+        <h2>1. Payer setup</h2>
+        <label>Payer address (for read-only queries)</label><input id="payerInput" value="0xB6dE519D266F355C41fa4Dfe7b72112E30EF35AA" />
+        <label>Agent key address</label><input id="agentInput" value="0xbF02Ed2Afc6BeE14BB989Eb8351c60030FDc2fd7" />
+        <label>Deposit amount (tUSD8)</label><input id="depositAmount" value="10" />
+        <button id="approveBtn">Approve tUSD8</button>
+        <button id="depositBtn" class="secondary">Deposit</button>
+        <button id="withdrawBtn" class="secondary">Withdraw</button>
+        <label>Agent budget (tUSD8)</label><input id="budgetAmount" value="20" />
+        <label>Agent session lifetime (seconds)</label><input id="sessionLife" value="3600" />
+        <button id="authorizeBtn">Authorize agent</button>
+        <button id="revokeBtn" class="secondary">Revoke agent</button>
+      </section>
+
+      <section class="card">
+        <h2>2. Merchant setup</h2>
+        <label>Merchant address</label><input id="merchantInput" value="0xc1c4E40c0841a6a4ab22488b161a95D220193F05" />
+        <label>Payee display name</label><input id="payeeName" value="Acme Studio" />
+        <button id="registerPayeeBtn">Register payee hash</button>
+        <p class="sub">The hash is <code>ethers.id(name)</code>. Connect as the merchant before registering or creating an invoice.</p>
+        <label>Memo</label><input id="memoInput" value="invoice-2026-001" />
+        <label>Invoice amount (tUSD8)</label><input id="invoiceAmount" value="5" />
+        <label>Pay-by window (seconds)</label><input id="payWindow" value="1800" />
+        <label>Release window (seconds)</label><input id="releaseWindow" value="7200" />
+        <button id="createInvoiceBtn">Create invoice</button>
+      </section>
+
+      <section class="card">
+        <h2>3. Agent payment</h2>
+        <label>Invoice ID</label><input id="invoiceId" value="1" />
+        <button id="readInvoiceBtn" class="secondary">Read invoice</button>
+        <button id="payBtn">Pay invoice (agent)</button>
+        <button id="releaseBtn">Release to merchant</button>
+        <button id="refundBtn" class="secondary">Refund to payer</button>
+        <label>Read session remaining</label>
+        <button id="sessionBtn" class="secondary">Read remaining budget</button>
+      </section>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <h2>Activity</h2>
+      <pre id="log">No transactions yet.</pre>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script>
+  <script>
+    const CHAIN_ID = 44005n;
+    const EXPLORER = "https://explorer-test.qday.info/tx/";
+    const ABI = [
+      "function approve(address,uint256) returns (bool)",
+      "function deposit(uint256)",
+      "function withdraw(uint256)",
+      "function registerPayee(bytes32)",
+      "function authorizeAgent(address,uint256,uint64)",
+      "function revokeAgent(address)",
+      "function createInvoice(address,address,uint256,uint64,uint64,bytes32,bytes32) returns (uint256)",
+      "function payInvoice(uint256)",
+      "function release(uint256)",
+      "function refund(uint256)",
+      "function invoiceCount() view returns (uint256)",
+      "function balanceOf(address) view returns (uint256)",
+      "function sessionRemaining(address,address) view returns (uint256)",
+      "function getInvoice(uint256) view returns (tuple(address payer,address merchant,uint256 amount,bytes32 payeeHash,bytes32 memoHash,uint64 createdAt,uint64 payBy,uint64 releaseBy,uint8 status,address paidByAgent))"
+    ];
+
+    let provider, signer, token, guard, account;
+
+    const $ = (id) => document.getElementById(id);
+    const val = (id) => $(id).value.trim();
+    const short = (a) => a ? a.slice(0, 6) + "…" + a.slice(-4) : "—";
+    const units = (id) => ethers.parseUnits(val(id), 6);
+    const now = () => Math.floor(Date.now() / 1000);
+
+    function log(message, href) {
+      const el = $("log");
+      const line = `[${new Date().toISOString()}] ${message}${href ? "  " + href : ""}`;
+      el.textContent = el.textContent === "No transactions yet." ? line : el.textContent + "\n" + line;
+      el.scrollTop = el.scrollHeight;
+    }
+
+    function status(message) { $("state").textContent = message; }
+
+    async function tx(label, action) {
+      try {
+        status(`${label} submitted…`);
+        const sent = await action();
+        status(`${label} sent: ${sent.hash}`);
+        log(`${label} ${sent.hash}`, `${EXPLORER}${sent.hash}`);
+        await sent.wait();
+        status(`${label} confirmed.`);
+        await refresh();
+        return sent;
+      } catch (e) {
+        status(`${label} failed: ${e.shortMessage || e.message || e}`);
+        log(`${label} FAILED: ${e.shortMessage || e.message || e}`);
+        throw e;
+      }
+    }
+
+    async function connect() {
+      if (!window.ethereum) { status("MetaMask not detected. Install it or use an injected EVM wallet."); return; }
+      provider = new ethers.BrowserProvider(window.ethereum);
+      await window.ethereum.request({ method: "eth_requestAccounts" });
+      const network = await provider.getNetwork();
+      if (network.chainId !== CHAIN_ID) { status(`Wrong chain ${network.chainId}. Switch to Aevum Testnet (44005).`); return; }
+      signer = await provider.getSigner();
+      account = await signer.getAddress();
+      token = new ethers.Contract(val("tokenInput"), ABI, signer);
+      guard = new ethers.Contract(val("contractInput"), ABI, signer);
+      $("accountLabel").textContent = short(account);
+      status(`Connected as ${account}`);
+      await refresh();
+    }
+
+    async function switchNetwork() {
+      if (!window.ethereum) { status("MetaMask not detected."); return; }
+      try {
+        await window.ethereum.request({
+          method: "wallet_addEthereumChain",
+          params: [{
+            chainId: "0xABE5",
+            chainName: "QDay Aevum Testnet",
+            rpcUrls: ["https://rpc-test.qday.info"],
+            blockExplorerUrls: ["https://explorer-test.qday.info"],
+            nativeCurrency: { name: "tQDAY", symbol: "tQDAY", decimals: 18 }
+          }]
+        });
+        status("Network request accepted. Reconnect if needed.");
+      } catch (e) { status(`Network switch failed: ${e.message || e}`); }
+    }
+
+    async function refresh() {
+      if (!signer || !guard || !token || !val("contractInput")) return;
+      const payer = val("payerInput");
+      const agent = val("agentInput");
+      const [tokenBal, vaultBal, count, remaining] = await Promise.all([
+        token.balanceOf(payer),
+        guard.balanceOf(payer),
+        guard.invoiceCount(),
+        guard.sessionRemaining(payer, agent)
+      ]);
+      status(`Payer tUSD8 wallet: ${ethers.formatUnits(tokenBal, 6)} | Vault: ${ethers.formatUnits(vaultBal, 6)} | Agent budget left: ${ethers.formatUnits(remaining, 6)} | Invoices: ${count}`);
+    }
+
+    async function readInvoice() {
+      const id = BigInt(val("invoiceId"));
+      const inv = await guard.getInvoice(id);
+      const names = ["None", "Created", "Paid", "Released", "Refunded", "Cancelled"];
+      const text = `Invoice #${id}: payer=${short(inv.payer)} merchant=${short(inv.merchant)} amount=${ethers.formatUnits(inv.amount, 6)} tUSD8 status=${names[Number(inv.status)] || inv.status} payBy=${new Date(Number(inv.payBy) * 1000).toISOString()} releaseBy=${new Date(Number(inv.releaseBy) * 1000).toISOString()}`;
+      status(text);
+      log(text);
+    }
+
+    function bind(id, handler) { $(id).addEventListener("click", async () => { try { await handler(); } catch (_) {} }); }
+
+    bind("connectBtn", connect);
+    bind("switchBtn", switchNetwork);
+    bind("refreshBtn", refresh);
+    bind("approveBtn", () => tx("approve", () => token.approve(val("contractInput"), units("depositAmount"))));
+    bind("depositBtn", () => tx("deposit", () => guard.deposit(units("depositAmount"))));
+    bind("withdrawBtn", () => tx("withdraw", () => guard.withdraw(units("depositAmount"))));
+    bind("registerPayeeBtn", () => tx("registerPayee", () => guard.registerPayee(ethers.id(val("payeeName")))));
+    bind("authorizeBtn", () => tx("authorizeAgent", () => guard.authorizeAgent(val("agentInput"), units("budgetAmount"), now() + Number(val("sessionLife")))));
+    bind("revokeBtn", () => tx("revokeAgent", () => guard.revokeAgent(val("agentInput"))));
+    bind("createInvoiceBtn", () => tx("createInvoice", () => guard.createInvoice(
+      val("payerInput"), val("merchantInput"), units("invoiceAmount"),
+      now() + Number(val("payWindow")), now() + Number(val("releaseWindow")),
+      ethers.id(val("payeeName")), ethers.id(val("memoInput"))
+    )));
+    bind("payBtn", () => tx("payInvoice", () => guard.payInvoice(BigInt(val("invoiceId")))));
+    bind("releaseBtn", () => tx("release", () => guard.release(BigInt(val("invoiceId")))));
+    bind("refundBtn", () => tx("refund", () => guard.refund(BigInt(val("invoiceId")))));
+    bind("readInvoiceBtn", readInvoice);
+    bind("sessionBtn", async () => {
+      const remaining = await guard.sessionRemaining(val("payerInput"), val("agentInput"));
+      status(`Agent budget remaining: ${ethers.formatUnits(remaining, 6)} tUSD8`);
+    });
+
+    window.ethereum?.on?.("accountsChanged", (accounts) => { account = accounts[0]; $("accountLabel").textContent = short(account); });
+    window.ethereum?.on?.("chainChanged", () => location.reload());
+  </script>
+</body>
+</html>
