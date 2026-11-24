@@ -14,7 +14,7 @@
 | Constructor arg | tUSD8 `0x456569838f1d43009A91ebA4263147Afd7233483` |
 | Deploy tx | `0x923e5fcbc6fcc858152aebf2cb6eaefa91bd0dd5acf232e2f9db3cc7639eb0d6` |
 | Deploy explorer | <https://explorer-test.qday.info/tx/0x923e5fcbc6fcc858152aebf2cb6eaefa91bd0dd5acf232e2f9db3cc7639eb0d6> |
-| Verification status | Source verification not attempted: QDay starter kit says the explorer verifier is currently broken. Exact source is in this repo. |
+| Verification status | Explorer verifier not attempted: QDay starter kit says it is currently broken. Exact source is pinned at commit `26bb13d921c33f403db02abc312a8bfc931e9e5e` in the public repo: <https://github.com/tuco8/payguard-aevum/tree/26bb13d921c33f403db02abc312a8bfc931e9e5e> |
 
 ## Roles
 

@@ -53,10 +53,11 @@ Core state: `balanceOf[payer]`, `_sessions[payer][agent]`, `payeeRegistry[mercha
 
 ## Links to include in the form
 
-- Public GitHub repo: `PENDING — publish first`
+- Public GitHub repo: <https://github.com/tuco8/payguard-aevum>
+- Exact deployed source commit: <https://github.com/tuco8/payguard-aevum/tree/26bb13d921c33f403db02abc312a8bfc931e9e5e>
 - Live contract: <https://explorer-test.qday.info/address/0x55A357F9097Ab0C6F711EF23c46c6d32F0f1cFe2>
 - Deploy transaction: <https://explorer-test.qday.info/tx/0x923e5fcbc6fcc858152aebf2cb6eaefa91bd0dd5acf232e2f9db3cc7639eb0d6>
-- Demo video: `PENDING — record first`
+- Demo video: `PENDING — record tomorrow`
 - Evidence/transactions: see `EVIDENCE.md` in the repository
 
 ## Key transaction hashes

@@ -1,5 +1,7 @@
 # PayGuard — Budgeted Agent Payments on Aevum
 
+Public repository: <https://github.com/tuco8/payguard-aevum> · Deployed source commit: `26bb13d921c33f403db02abc312a8bfc931e9e5e`
+
 PayGuard is a stablecoin payment vault for the **Aevum Builder Challenge #1**. It lets a human pre-fund a tUSD8 balance, grant a time-boxed and capped budget to an agent key, and let that agent pay only a payee whose identity hash has been registered on-chain. Funds remain in escrow until the merchant releases them or the payer refunds before the settlement deadline.
 
 This project targets the **Invoice Payments**, **Confirmation of Payee**, and **Native AI Assistants** tracks at once.
